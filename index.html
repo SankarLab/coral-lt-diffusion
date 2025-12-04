@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORAL: Disentangling Latent Representations in Long-Tailed Diffusion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a1f3a 100%);
+            color: #e8e6e3;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(138, 43, 226, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 105, 180, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .paper-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .conference-badge {
+            display: inline-block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #ff69b4;
+            background: rgba(255, 105, 180, 0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+            margin-bottom: 2rem;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 2.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #e8e6e3 50%, #d4a5ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        .authors {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: #b8b5b2;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out 0.7s both;
+        }
+
+        .author {
+            display: inline;
+            transition: color 0.3s ease;
+        }
+
+        .author:hover {
+            color: #e8e6e3;
+        }
+
+        .separator {
+            margin: 0 0.3rem;
+            color: #6a677f;
+        }
+
+        .links-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 4rem;
+            animation: fadeInUp 1s ease-out 0.9s both;
+        }
+
+        .link-card {
+            display: block;
+            padding: 1.8rem 2.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 105, 180, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .link-card:hover::before {
+            left: 100%;
+        }
+
+        .link-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 105, 180, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+        }
+
+        .link-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #ff69b4;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .link-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e8e6e3;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .link-icon {
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .link-card:hover .link-icon {
+            transform: translateX(5px);
+        }
+
+        .decoration {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            pointer-events: none;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .decoration-1 {
+            top: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.4), transparent);
+            animation-delay: 0s;
+        }
+
+        .decoration-2 {
+            bottom: -150px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(255, 105, 180, 0.3), transparent);
+            animation-delay: 3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .authors {
+                font-size: 1rem;
+            }
+
+            .link-card {
+                padding: 1.5rem 1.75rem;
+            }
+
+            .link-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+
+    <div class="container">
+        <div class="paper-header">
+            <div class="conference-badge">NeurIPS 2025</div>
+            
+            <h1>CORAL: Disentangling Latent Representations in Long-Tailed Diffusion</h1>
+            
+            <div class="authors">
+                <span class="author">Esther Rodriguez</span><span class="separator">·</span>
+                <span class="author">Monica Welfert</span><span class="separator">·</span>
+                <span class="author">Samuel McDowell</span><span class="separator">·</span>
+                <span class="author">Nathan Stromberg</span><span class="separator">·</span>
+                <span class="author">Julian Antolin Camarena</span><span class="separator">·</span>
+                <span class="author">Lalitha Sankar</span>
+            </div>
+        </div>
+
+        <div class="links-section">
+            <a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/117697" class="link-card" target="_blank" rel="noopener noreferrer">
+                <span class="link-label">Conference</span>
+                <div class="link-title">
+                    <span>NeurIPS 2025 Poster</span>
+                    <span class="link-icon">→</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
